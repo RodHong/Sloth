@@ -87,19 +87,42 @@
   .steam { animation: steam 3s ease-in-out infinite; }
   @keyframes steam { 0%,100% { transform: translateY(0) scaleY(1); opacity:.5;} 50% { transform: translateY(-6px) scaleY(1.15); opacity:.9;} }
 
-  /* 人來人往：首頁底部行走剪影 */
-  .crowd { position:absolute; left:0; right:0; bottom:0; height:150px; z-index:5; pointer-events:none; overflow:hidden;
-           -webkit-mask-image:linear-gradient(to top,#000 40%,transparent); mask-image:linear-gradient(to top,#000 40%,transparent); }
-  .walker { position:absolute; bottom:0; left:0; will-change:transform; animation: walk-ltr linear infinite; }
-  .walker.rtl { animation-name: walk-rtl; }
-  .walker .bob { animation: bob .6s ease-in-out infinite; transform-origin:50% 100%; }
+  /* 人來人往 3D：行人走進、走出店家 */
+  .crowd { position:absolute; left:0; right:0; bottom:0; height:clamp(200px,32vh,280px); z-index:5; pointer-events:none; overflow:hidden;
+           perspective:620px; perspective-origin:50% 18%;
+           -webkit-mask-image:linear-gradient(to top,#000 55%,transparent); mask-image:linear-gradient(to top,#000 55%,transparent); }
+  .crowd .stage { position:absolute; inset:0; transform-style:preserve-3d; }
+  /* 地面：延伸到店門口的道路 */
+  .crowd .road { position:absolute; left:50%; bottom:0; width:260vw; height:520px; margin-left:-130vw;
+                 background:linear-gradient(to top, rgba(40,26,18,.55), rgba(40,26,18,.0));
+                 transform-origin:50% 100%; transform:rotateX(78deg) translateZ(-20px); }
+  /* 店面（位於場景深處） */
+  .crowd .shop { position:absolute; left:50%; bottom:0; width:230px; height:150px; margin-left:-115px;
+                 transform:translate3d(0,0,-420px); }
+  .crowd .shop .body { position:absolute; inset:34px 0 0 0; background:#6d4a30; border-radius:6px 6px 0 0; box-shadow:inset 0 0 0 3px #4a3120; }
+  .crowd .shop .awning { position:absolute; left:-8px; right:-8px; top:20px; height:26px; border-radius:4px;
+                         background:repeating-linear-gradient(90deg,#fb7f33 0 22px,#fff3e3 22px 44px); box-shadow:0 4px 8px rgba(0,0,0,.35); }
+  .crowd .shop .sign { position:absolute; left:50%; top:-6px; transform:translateX(-50%); padding:2px 14px; border-radius:6px;
+                       background:#2b1c14; color:#ffd9a8; font:700 15px/1.4 'Noto Serif TC',serif; letter-spacing:.2em; white-space:nowrap; }
+  .crowd .shop .door { position:absolute; left:50%; bottom:0; width:50px; height:78px; margin-left:-25px; border-radius:4px 4px 0 0;
+                       background:linear-gradient(#ffcf8a,#ff9d4d); box-shadow:0 0 28px 6px rgba(255,170,80,.55); }
+  .crowd .shop .win { position:absolute; bottom:22px; width:44px; height:44px; border-radius:3px; background:#ffcf8a; opacity:.85; }
+  .crowd .shop .win.l { left:16px; } .crowd .shop .win.r { right:16px; }
+  /* 行人：以 3D 空間位移，從近處走到門口（或反向走出） */
+  .walker { position:absolute; left:50%; bottom:0; margin-left:-20px; transform-style:preserve-3d; will-change:transform,opacity;
+            animation: walk3d var(--dur,12s) linear infinite; animation-delay:var(--delay,0s); }
+  .walker.out { animation-direction: reverse; }
+  .walker .bob { display:block; animation: bob .6s ease-in-out infinite; transform-origin:50% 100%; }
   .walker .leg-a { transform-origin:50% 0; animation: swing .6s ease-in-out infinite; }
   .walker .leg-b { transform-origin:50% 0; animation: swing .6s ease-in-out infinite reverse; }
-  @keyframes walk-ltr { from { transform: translateX(-80px);} to { transform: translateX(calc(100vw + 80px));} }
-  @keyframes walk-rtl { from { transform: translateX(calc(100vw + 80px)) scaleX(-1);} to { transform: translateX(-80px) scaleX(-1);} }
+  @keyframes walk3d {
+    0%   { transform: translate3d(var(--x0),0,260px);  opacity:0; }
+    8%   { opacity:1; }
+    88%  { opacity:1; }
+    100% { transform: translate3d(0,0,-405px);          opacity:0; }
+  }
   @keyframes bob { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-3px);} }
   @keyframes swing { 0%,100% { transform: rotate(22deg);} 50% { transform: rotate(-22deg);} }
-  @media (prefers-reduced-motion: reduce) { .crowd { display:none; } }
 </style>
 </head>
 
@@ -184,7 +207,15 @@
 
 
   <!-- 人來人往動畫 -->
-  <div class="crowd" id="crowd" aria-hidden="true"></div>
+  <div class="crowd" id="crowd" aria-hidden="true">
+    <div class="stage">
+      <div class="road"></div>
+      <div class="shop">
+        <div class="body"></div><div class="awning"></div><div class="sign">金穗鍋貼</div>
+        <div class="win l"></div><div class="win r"></div><div class="door"></div>
+      </div>
+    </div>
+  </div>
 
   <div class="relative z-10 text-center px-6 max-w-3xl fade-in">
     <p class="text-ember-300 tracking-[0.4em] text-xs md:text-sm font-semibold mb-4">传承三十年 · 每日現包現煎</p>
@@ -863,19 +894,22 @@ function appData() {
 </a>
 
 <script>
-  // 首頁「人來人往」行走剪影
+  // 首頁 3D「人來人往」：行人走進、走出店家
   (function () {
-    var crowd = document.getElementById('crowd');
-    if (!crowd) return;
-    var colors = ['#1f1410', '#2b1c14', '#3a271b'];
-    for (var i = 0; i < 14; i++) {
-      var h = 60 + Math.random() * 50;          // 身高 60–110px
+    var stage = document.querySelector('#crowd .stage');
+    if (!stage) return;
+    var colors = ['#1f1410', '#2b1c14', '#3a271b', '#4a3120'];
+    var N = 12;
+    for (var i = 0; i < N; i++) {
+      var h = 78 + Math.random() * 28;
       var w = h * 0.4;
+      var side = Math.random() < 0.5 ? -1 : 1;
       var el = document.createElement('div');
-      el.className = 'walker' + (Math.random() < 0.5 ? ' rtl' : '');
-      el.style.animationDuration = (16 + Math.random() * 18) + 's';
-      el.style.animationDelay = (-Math.random() * 34) + 's';
-      el.style.opacity = (0.55 + Math.random() * 0.4).toFixed(2);
+      el.className = 'walker' + (i % 2 ? ' out' : '');
+      el.style.setProperty('--x0', side * (180 + Math.random() * 360) + 'px');
+      el.style.setProperty('--dur', (10 + Math.random() * 6) + 's');
+      el.style.setProperty('--delay', (-Math.random() * 16) + 's');
+      el.style.width = w + 'px';
       var c = colors[i % colors.length];
       el.innerHTML =
         '<svg class="bob" width="' + w + '" height="' + h + '" viewBox="0 0 40 100" fill="' + c + '" style="animation-delay:' + (-Math.random()).toFixed(2) + 's">' +
@@ -884,7 +918,7 @@ function appData() {
         '<g class="leg-a"><rect x="12" y="54" width="8" height="44" rx="4"/></g>' +
         '<g class="leg-b"><rect x="20" y="54" width="8" height="44" rx="4"/></g>' +
         '</svg>';
-      crowd.appendChild(el);
+      stage.appendChild(el);
     }
   })();
 </script>
