@@ -692,6 +692,14 @@
             <input x-model="customerInfo.address" type="text" placeholder="請輸入收件地址"
                    class="w-full border border-wood-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ember-400 bg-cream-50">
           </div>
+          <div>
+            <label class="text-sm font-semibold text-wood-600 block mb-1.5">備註（選填）</label>
+            <input x-model="customerInfo.note" type="text" maxlength="200" placeholder="例如：不要香菜、希望幾點取餐"
+                   class="w-full border border-wood-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-ember-400 bg-cream-50">
+          </div>
+          <!-- 防機器人蜜罐：真人看不到也不會填 -->
+          <input x-model="customerInfo.website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true"
+                 style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
         </div>
 
         <!-- order summary -->
@@ -708,11 +716,12 @@
           </div>
         </div>
 
+        <p x-show="orderError" x-cloak x-text="orderError" class="text-sm text-red-600 mb-3 text-center" role="alert"></p>
         <button @click="submitOrder()"
-                :disabled="!customerInfo.name || !customerInfo.phone"
-                :class="(!customerInfo.name || !customerInfo.phone) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-ember-500'"
+                :disabled="submitting || !customerInfo.name || !customerInfo.phone"
+                :class="(submitting || !customerInfo.name || !customerInfo.phone) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-ember-500'"
                 class="w-full bg-ember-400 text-white font-bold py-4 rounded-full shadow-soft transition">
-          確認送出訂單
+          <span x-text="submitting ? '送出中…' : '確認送出訂單'"></span>
         </button>
       </div>
     </template>
@@ -752,8 +761,14 @@ function appData() {
     activeStore: 0,
     selectedOrderType: 'dinein',
     orderNumber: '',
+    submitting: false,
+    orderError: '',
 
-    customerInfo: { name: '', phone: '', address: '' },
+    // Google Apps Script 部署後的網頁應用程式網址（見 gas/README.md）。
+    // 留空時為「示範模式」：不會送出到 Google 試算表，只在本機產生訂單編號。
+    ORDER_API_URL: '',
+
+    customerInfo: { name: '', phone: '', address: '', note: '', website: '' },
 
     // ---------- data ----------
     categories: [
@@ -862,16 +877,51 @@ function appData() {
       this._toastTimer = setTimeout(() => { this.toastVisible = false; }, 2200);
     },
 
-    submitOrder() {
-      if (!this.customerInfo.name || !this.customerInfo.phone) return;
-      this.orderNumber = 'JS' + Math.floor(100000 + Math.random() * 900000);
-      this.orderComplete = true;
+    async submitOrder() {
+      if (this.submitting) return;
+      const c = this.customerInfo;
+      if (!c.name || !c.phone) return;
+      this.orderError = '';
+
+      // 示範模式（尚未設定 ORDER_API_URL）
+      if (!this.ORDER_API_URL) {
+        this.orderNumber = 'JS' + Math.floor(100000 + Math.random() * 900000);
+        this.orderComplete = true;
+        return;
+      }
+
+      this.submitting = true;
+      try {
+        // 只送品項 ID 與數量；金額由後端依試算表「菜單」重新計算
+        const payload = {
+          name: c.name, phone: c.phone, note: c.note, website: c.website,
+          orderType: this.selectedOrderType,
+          address: this.selectedOrderType === 'delivery' ? c.address : '',
+          items: this.cart.map(i => ({ id: i.id, qty: i.qty })),
+        };
+        // 使用 text/plain 避免瀏覽器 CORS 預檢（Apps Script 不支援 OPTIONS）
+        const res = await fetch(this.ORDER_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || '訂單送出失敗');
+        this.orderNumber = data.orderNumber;
+        this.orderComplete = true;
+      } catch (err) {
+        this.orderError = (err && err.message && err.message !== 'Failed to fetch')
+          ? err.message : '網路連線異常，訂單尚未送出，請檢查網路後再試一次。';
+      } finally {
+        this.submitting = false;
+      }
     },
     closeCheckout() {
       this.checkoutOpen = false;
       this.orderComplete = false;
       this.cart = [];
-      this.customerInfo = { name: '', phone: '', address: '' };
+      this.customerInfo = { name: '', phone: '', address: '', note: '', website: '' };
+      this.orderError = '';
       this.selectedOrderType = 'dinein';
     },
 
