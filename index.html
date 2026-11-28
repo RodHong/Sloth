@@ -120,11 +120,11 @@
   .crowd .shop .win.l { left:16px; } .crowd .shop .win.r { right:16px; }
   /* 行人：以 3D 空間位移，從近處走到門口（或反向走出） */
   .walker { position:absolute; left:50%; bottom:0; margin-left:-20px; transform-style:preserve-3d; will-change:transform,opacity;
-            animation: walk3d var(--dur,12s) linear infinite; animation-delay:var(--delay,0s); }
+            animation: walk3d var(--dur,12s) cubic-bezier(.45,0,.55,1) infinite; animation-delay:var(--delay,0s); filter: drop-shadow(0 2px 2px rgba(20,10,5,.35)); }
   .walker.out { animation-direction: reverse; }
-  .walker .bob { display:block; animation: bob .6s ease-in-out infinite; transform-origin:50% 100%; }
+  .walker .shadow { position:absolute; left:50%; bottom:-2px; width:30px; height:9px; margin-left:-15px; border-radius:50%; background:radial-gradient(ellipse at center, rgba(20,12,6,.5), transparent 72%); } .walker .bob { display:block; position:relative; animation: bob .6s ease-in-out infinite; transform-origin:50% 100%; }
   .walker .leg-a { transform-origin:50% 0; animation: swing .6s ease-in-out infinite; }
-  .walker .leg-b { transform-origin:50% 0; animation: swing .6s ease-in-out infinite reverse; }
+  .walker .leg-b { transform-origin:50% 0; animation: swing .6s ease-in-out infinite reverse; } .walker .arm-a { transform-origin:50% 0; animation: armswing .6s ease-in-out infinite reverse; } .walker .arm-b { transform-origin:50% 0; animation: armswing .6s ease-in-out infinite; }
   @keyframes walk3d {
     0%   { transform: translate3d(var(--x0),0,260px);  opacity:0; }
     8%   { opacity:1; }
@@ -132,7 +132,7 @@
     100% { transform: translate3d(0,0,-405px);          opacity:0; }
   }
   @keyframes bob { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-3px);} }
-  @keyframes swing { 0%,100% { transform: rotate(22deg);} 50% { transform: rotate(-22deg);} }
+  @keyframes swing { 0%,100% { transform: rotate(18deg);} 50% { transform: rotate(-18deg);} } @keyframes armswing { 0%,100% { transform: rotate(-22deg);} 50% { transform: rotate(22deg);} }
 </style>
 </head>
 
@@ -287,7 +287,7 @@
     </div>
 
     <div class="order-1 lg:order-2 relative">
-      <img src="https://images.unsplash.com/photo-1559847844-5315695dadae?w=900&q=80&auto=format&fit=crop"
+      <img src="https://images.unsplash.com/photo-1595378833354-e69c8a7746db?w=900&q=80&auto=format&fit=crop"
            alt="手工現包鍋貼"
            class="rounded-[2rem] shadow-soft w-full h-[420px] md:h-[500px] object-cover">
       <div class="absolute -bottom-6 -left-6 bg-wood-700 text-cream-50 rounded-2xl p-5 shadow-soft hidden sm:flex items-center gap-3 max-w-[220px]">
@@ -366,7 +366,7 @@
      GIFT BOXES
 ========================================================== -->
 <section id="gifts" class="py-24 bg-wood-800 text-cream-50 relative overflow-hidden">
-  <div class="absolute inset-0 opacity-10" style="background-image:url('https://images.unsplash.com/photo-1541379392-41d0e4c3b0a8?w=1600&q=60&auto=format&fit=crop'); background-size:cover; background-position:center;"></div>
+  <div class="absolute inset-0 opacity-10" style="background-image:url('https://images.unsplash.com/photo-1626322751504-930506dd41ca?w=1600&q=60&auto=format&fit=crop'); background-size:cover; background-position:center;"></div>
 
   <div class="relative max-w-7xl mx-auto px-5 lg:px-8">
     <div class="text-center max-w-2xl mx-auto mb-14">
@@ -784,40 +784,40 @@ function appData() {
         img: 'https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=500&q=80&auto=format&fit=crop' },
       { id: 2, cat: 'guotie', name: '韭菜豬肉鍋貼', price: 190, spicy: 0,
         desc: '鮮香韭菜搭配溫體豬肉，香氣逼人。', tags: ['爆汁'],
-        img: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1638502521795-89107ac5e246?w=500&q=80&auto=format&fit=crop' },
       { id: 3, cat: 'guotie', name: '麻辣牛肉鍋貼', price: 210, spicy: 2,
         desc: '選用嚴選牛肉與特調麻辣醬，香辣過癮。', tags: ['人氣','辣'],
-        img: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=500&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1583224994076-ae951d019af7?w=500&q=80&auto=format&fit=crop' },
       { id: 4, cat: 'jiaozi', name: '經典豬肉水餃', price: 160, spicy: 0,
         desc: '手工捏製，皮薄餡多，水煮保留原汁原味。', tags: ['經典'],
-        img: 'https://images.unsplash.com/photo-1541379392-41d0e4c3b0a8?w=500&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1660213372359-f9608a9c09f0?w=500&q=80&auto=format&fit=crop' },
       { id: 5, cat: 'jiaozi', name: '高麗菜蝦仁水餃', price: 220, spicy: 0,
         desc: '鮮甜蝦仁與爽脆高麗菜的絕妙組合。', tags: ['爆汁'],
-        img: 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=500&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1541696432-82c6da8ce7bf?w=500&q=80&auto=format&fit=crop' },
       { id: 6, cat: 'soup', name: '酸辣湯', price: 70, spicy: 1,
         desc: '酸辣開胃，佐餐首選。', tags: ['人氣'],
-        img: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=500&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1707895601304-62327fd562ef?w=500&q=80&auto=format&fit=crop' },
       { id: 7, cat: 'soup', name: '冬瓜茶', price: 40, spicy: 0,
         desc: '古法熬煮冬瓜茶，消暑解膩。', tags: [],
-        img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1654818117776-9ae6519173d7?w=500&q=80&auto=format&fit=crop' },
       { id: 8, cat: 'sides', name: '涼拌小黃瓜', price: 60, spicy: 0,
         desc: '清爽開胃，解膩首選小菜。', tags: [],
-        img: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=500&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1791321827485-c8ccab1baf72?w=500&q=80&auto=format&fit=crop' },
       { id: 9, cat: 'sides', name: '滷豆干', price: 50, spicy: 0,
         desc: '老滷入味，口感扎實。', tags: ['經典'],
-        img: 'https://images.unsplash.com/photo-1598514983318-2f64f8f4796c?w=500&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1568085111659-dfbb330c3ade?w=500&q=80&auto=format&fit=crop' },
     ],
 
     giftBoxes: [
       { id: 101, name: '招牌招財鍋貼禮盒 50入', price: 980,
         desc: '精選豬肉與韭菜兩種口味，年節送禮首選。',
-        img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=700&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1675774644393-7bcfa424dec7?w=700&q=80&auto=format&fit=crop' },
       { id: 102, name: '團圓水餃家庭組 100入', price: 1280,
         desc: '份量滿滿，全家團聚最佳良伴。',
-        img: 'https://images.unsplash.com/photo-1541379392-41d0e4c3b0a8?w=700&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1768046308289-469b32eeec5c?w=700&q=80&auto=format&fit=crop' },
       { id: 103, name: '節慶綜合禮盒', price: 1580,
         desc: '鍋貼、水餃、小菜綜合組，送禮自用兩相宜。',
-        img: 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=700&q=80&auto=format&fit=crop' },
+        img: 'https://images.unsplash.com/photo-1708782341487-6544f0d9efe8?w=700&q=80&auto=format&fit=crop' },
     ],
 
     stores: [
@@ -958,7 +958,7 @@ function appData() {
   (function () {
     var stage = document.querySelector('#crowd .stage');
     if (!stage) return;
-    var colors = ['#1f1410', '#2b1c14', '#3a271b', '#4a3120'];
+    var colors = ['#2b1c14e6', '#3a271be6', '#4a3120e6', '#5c3d2be6'];
     var N = 12;
     for (var i = 0; i < N; i++) {
       var h = 78 + Math.random() * 28;
@@ -971,11 +971,11 @@ function appData() {
       el.style.setProperty('--delay', (-Math.random() * 16) + 's');
       el.style.width = w + 'px';
       var c = colors[i % colors.length];
-      el.innerHTML =
+      el.innerHTML = '<div class="shadow"></div>' +
         '<svg class="bob" width="' + w + '" height="' + h + '" viewBox="0 0 40 100" fill="' + c + '" style="animation-delay:' + (-Math.random()).toFixed(2) + 's">' +
-        '<circle cx="20" cy="10" r="8"/>' +
+        '<circle cx="20" cy="9" r="7.5"/>' +
         '<path d="M10 22h20c3 0 5 3 5 6v26c0 2-2 3-3 3s-3-1-3-3V36h-1v20H12V36h-1v18c0 2-2 3-3 3s-3-1-3-3V28c0-3 2-6 5-6z"/>' +
-        '<g class="leg-a"><rect x="12" y="54" width="8" height="44" rx="4"/></g>' +
+        '<g class="arm-a"><rect x="5" y="23" width="6" height="24" rx="3"/></g>' + '<g class="arm-b"><rect x="29" y="23" width="6" height="24" rx="3"/></g>' + '<g class="leg-a"><rect x="12" y="54" width="8" height="44" rx="4"/></g>' +
         '<g class="leg-b"><rect x="20" y="54" width="8" height="44" rx="4"/></g>' +
         '</svg>';
       stage.appendChild(el);
